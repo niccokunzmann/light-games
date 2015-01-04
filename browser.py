@@ -3,8 +3,6 @@ import serial
 import os
 from selenium import webdriver
 import time
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
 import threading
 import overview_site
 

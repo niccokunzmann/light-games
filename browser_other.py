@@ -1,3 +1,5 @@
+from selenium.webdriver.common.keys import Keys
+
 # other systems
 def simulate_key_down(key):
     key = keys[key]
