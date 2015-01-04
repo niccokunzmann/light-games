@@ -9,6 +9,9 @@ import overview_site
 if os.name == 'nt':
     import browser_nt
     from browser_nt import *
+elif os.name == 'posix':
+    import browser_posix
+    from browser_posix import *
 else:
     import browser_other
     from browser_other import *
@@ -186,24 +189,25 @@ def get_web_window():
         browser.set_window_position(0,0)
         return browser
 
-start_selenium_server()
-serial_to_light = open_serial()
-if not serial_to_light:
-    print("""Could not open a connection to the Arduino.
+if __name__ == '__main__':
+    start_selenium_server()
+    serial_to_light = open_serial()
+    if not serial_to_light:
+        print("""Could not open a connection to the Arduino.
 Maybe the Arduino is not connected
 or it does not run the right program. Exiting...""")
-    exit(1)
+        exit(1)
 
-browser = get_web_window()
-set_browser(browser)
-maximize_browser()
-open_overview()
-try:
-    while 1:
-        key_event = get_key_event_from_serial()
-        if key_event:
-            handle_key_event(key_event)
-finally:
-    with browser_lock:
-        browser.close()
-    remove_all_key_presses()
+    browser = get_web_window()
+    set_browser(browser)
+    maximize_browser()
+    open_overview()
+    try:
+        while 1:
+            key_event = get_key_event_from_serial()
+            if key_event:
+                handle_key_event(key_event)
+    finally:
+        with browser_lock:
+            browser.close()
+        remove_all_key_presses()
