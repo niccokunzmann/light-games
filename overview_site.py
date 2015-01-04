@@ -1,3 +1,4 @@
+#/usr/bin/env python3
 import bottle
 import threading
 from bottle import route, run, static_file, redirect, response

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import serial
 import os
 from selenium import webdriver
