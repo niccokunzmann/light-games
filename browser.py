@@ -5,6 +5,7 @@ import time
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 import threading
+import overview_site
 
 SERIAL_IDENTIFIER = b"Light-Keyboard";
 
@@ -34,22 +35,39 @@ def start_selenium_server():
     subprocess.Popen(["javaw", "-jar", "selenium-server-standalone-2.44.0.jar"],
                      shell = True)
 
-game_index = 0
-def switch_game():
-    global game_index
-    game_index -= 1
-    with open("games.txt") as f:
-        for i, line in enumerate(f):
-            if i == game_index:
-                break
-    if game_index < 0:
-        game_index = i
-    url = line.strip()
+def click_in_the_middle():
+    x = browser.get_window_position()["x"]
+    y = browser.get_window_position()["y"]
+    height = browser.get_window_size()["height"]
+    width = browser.get_window_size()["width"]
+    click(x + width // 2, y + height // 2)
+
+def switch_to_game_url(url):
     browser.get(url)
     print("opened page", url)
     element = browser.find_element_by_xpath("//body")
     element.send_keys("")
     element.click()
+    time.sleep(4)
+    if "scratch.mit.edu" in url:
+        click_in_the_middle()
+    time.sleep(1)
+    path = overview_site.get_screenshot_path(url)
+    browser.get_screenshot_as_file(path)
+
+current_game_index = 0
+
+def switch_to_game(game_index):
+    global current_game_index
+    current_game_index = game_index
+    url = overview_site.get_url_from_index(game_index)
+    switch_to_game_url(url)
+
+def switch_game():
+    overview_url = overview_site.get_overview_game_url(current_game_index)
+    switch_to_game_url(overview_url)
+
+overview_site.switch_to_game = switch_to_game
     
 def open_serial():
     ports = list_serial_ports()
@@ -102,8 +120,8 @@ def remove_key_pressed(key):
     keys_removed.add(key)
 
 def remove_all_key_presses():
-    keys_removed += keys_pressed
-    keys_removed += keys_pressing
+    keys_removed.update(keys_pressed)
+    keys_removed.update(keys_pressing)
 
 if os.name == 'nt':
     print("nt")
@@ -130,7 +148,16 @@ if os.name == 'nt':
         b"4" : win32con.VK_SPACE,
         }
 
+    def click(x, y):
+        print("click", x, y)
+        win32api.SetCursorPos((x, y))
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
+        time.sleep(0.1)
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0)
+        time.sleep(0.1)
+
 else:
+    # other systems
     def simulate_key_down(key):
         key = keys[key]
         element = browser.find_element_by_xpath("//body")
@@ -146,6 +173,9 @@ else:
         b"3" : Keys.DOWN,
         b"4" : Keys.SPACE,
         }
+    
+    def click(x, y):
+        pass
 
 def press_key(key):
     simulate_key_down(key)
@@ -171,7 +201,7 @@ def handle_key_event(event):
             release_key(key)
         elif action == PRESS:
             print("press", key)
-            press_key(key)
+            press_key(key)                                                                                                                                                                                                                                                                                                                                                                                                      
         else:
             print("unknown action", event)
         
@@ -179,8 +209,12 @@ def handle_key_event(event):
 def get_web_window():
     browser = webdriver.Firefox()
     browser.set_window_position(0,0)
-    #browser.maximize_window()
+    browser.maximize_window()
     return browser
+
+
+def view_overview_site():
+    
 
 start_selenium_server()
 serial_to_light = open_serial()
@@ -198,5 +232,5 @@ try:
         if key_event:
             handle_key_event(key_event)
 finally:
-    browser.close()
+    #browser.close()
     remove_all_key_presses()
