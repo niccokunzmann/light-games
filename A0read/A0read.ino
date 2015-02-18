@@ -1,17 +1,15 @@
 
 
-#include <RunningMedian.h>
-
 #define SERIAL_IDENTIFIER "Light-Keyboard"
 
 const int number_of_samples = 30;
-const int noise_reducing_offset = 4;
+const int noise_reducing_offset = 20;
 
 class Sensor {
   private:
     int pin;
-    RunningMedian* rm;
     int last_sample;
+    int reference_sample;
     char key;
     boolean just_released;
     boolean just_pressed;
@@ -23,32 +21,18 @@ class Sensor {
       just_released = false;
       just_pressed = false;
       is_pressed = false;
-      rm = new RunningMedian(number_of_samples);
       key = key_to_press;
       setup();
     }
     
     void addSample(int sample) {
-      rm->add(sample);
       last_sample = sample;
     }
     
     void read() {
       addSample(analogRead(pin));
     }
-    
-    float maximum() {
-      return rm->getHighest();
-    }
-    
-    float minimum() {
-      return rm->getLowest();
-    }
-    
-    float average() {
-      return rm->getAverage();
-    }
-    
+
     void setup() {
       pinMode(pin, INPUT);      
       digitalWrite(pin, HIGH);
@@ -59,11 +43,11 @@ class Sensor {
     }
     
     boolean pressed() {
-      return last_sample > average() + noise_reducing_offset;
+      return reference_sample + noise_reducing_offset < last_sample;
     }
     
     boolean released() {
-      return last_sample < average() - noise_reducing_offset;
+      return reference_sample - noise_reducing_offset > last_sample;
     }
     
     boolean was_just_released() {
@@ -89,6 +73,9 @@ class Sensor {
       } else if (_released && is_pressed) {
         just_released = true;
         is_pressed = false;
+      }
+      if (_pressed || _released) {
+        reference_sample = last_sample;
       }
     }
     
@@ -147,11 +134,7 @@ void setup() {
 long next_update = 0;
 
 void loop(){
- 
-  if (next_update < millis()) {
-    update_sensors();
-    next_update = millis() + 20;
-  }
+ update_sensors();
 }
 
 

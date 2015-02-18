@@ -44,8 +44,13 @@ def switch_game():
                 break
     if game_index < 0:
         game_index = i
-    browser.get(line.strip())
-
+    url = line.strip()
+    browser.get(url)
+    print("opened page", url)
+    element = browser.find_element_by_xpath("//body")
+    element.send_keys("")
+    element.click()
+    
 def open_serial():
     ports = list_serial_ports()
     for port in reversed(ports):
@@ -67,16 +72,38 @@ def get_key_event_form_serial():
     elif line:
         print("Message from the Arduino:", line)
 
+# continuous key presses
+
 keys_pressed = set()
+keys_pressing = set()
+keys_removed = set()
 def press_keys():
     while 1:
         time.sleep(0.05)
-        for key in list(keys_pressed):
-            # multithreading issues
+        for key in range(len(keys_removed)):
+            key = keys_removed.pop()
+            if key in keys_pressed:
+                keys_pressed.remove(key)
+            if key in keys_pressing:
+                keys_pressing.remove(key)
+        for key in keys_pressing:
             simulate_key_down(key)
+        for key in range(len(keys_pressed)):
+            keys_pressing.add(keys_pressed.pop())
+
 key_pressed_thread = threading.Thread(target = press_keys)
 key_pressed_thread.deamon = True
 key_pressed_thread.start()
+
+def add_key_pressed(key):
+    keys_pressed.add(key)
+
+def remove_key_pressed(key):
+    keys_removed.add(key)
+
+def remove_all_key_presses():
+    keys_removed += keys_pressed
+    keys_removed += keys_pressing
 
 if os.name == 'nt':
     print("nt")
@@ -122,12 +149,11 @@ else:
 
 def press_key(key):
     simulate_key_down(key)
-    keys_pressed.add(key)
+    add_key_pressed(key)
 
 def release_key(key):
-    if key in keys_pressed:
-        keys_pressed.remove(key)
-    simulate_key_up(key)
+    remove_key_pressed(key)
+    simulate_key_up(key) #multithreading issues may arise
 
 RELEASE = b'-'[0]
 PRESS = b'+'[0]
@@ -140,8 +166,6 @@ def handle_key_event(event):
             switch_game()
     else:
         key = event[0]
-        element = browser.find_element_by_xpath("//body")
-        element.click()
         if action == RELEASE:
             print("release", key)
             release_key(key)
@@ -175,3 +199,4 @@ try:
             handle_key_event(key_event)
 finally:
     browser.close()
+    remove_all_key_presses()
