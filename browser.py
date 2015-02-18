@@ -67,18 +67,70 @@ def get_key_event_form_serial():
         print("Message from the Arduino:", line)
 
 if os.name == 'nt':
+    print("nt")
     # http://stackoverflow.com/questions/18096131/pywin32-sendkeys-windows-button-keypress
+    # http://stackoverflow.com/questions/1823762/sendkeys-for-python-3-1-on-windows/2004267#2004267
     import win32api
     import win32con
-    from win32con import KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_KEYDOWN
+    from win32con import KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP
+    # http://stackoverflow.com/questions/13289777/how-can-i-send-keyboard-commands-hold-release-simultanous-with-a-python-script
+    import ctypes
+    import time
 
+    SendInput = ctypes.windll.user32.SendInput
+
+    PUL = ctypes.POINTER(ctypes.c_ulong)
+    class KeyBdInput(ctypes.Structure):
+        _fields_ = [("wVk", ctypes.c_ushort),
+                    ("wScan", ctypes.c_ushort),
+                    ("dwFlags", ctypes.c_ulong),
+                    ("time", ctypes.c_ulong),
+                    ("dwExtraInfo", PUL)]
+
+    class HardwareInput(ctypes.Structure):
+        _fields_ = [("uMsg", ctypes.c_ulong),
+                    ("wParamL", ctypes.c_short),
+                    ("wParamH", ctypes.c_ushort)]
+
+    class MouseInput(ctypes.Structure):
+        _fields_ = [("dx", ctypes.c_long),
+                    ("dy", ctypes.c_long),
+                    ("mouseData", ctypes.c_ulong),
+                    ("dwFlags", ctypes.c_ulong),
+                    ("time",ctypes.c_ulong),
+                    ("dwExtraInfo", PUL)]
+
+    class Input_I(ctypes.Union):
+        _fields_ = [("ki", KeyBdInput),
+                     ("mi", MouseInput),
+                     ("hi", HardwareInput)]
+
+    class Input(ctypes.Structure):
+        _fields_ = [("type", ctypes.c_ulong),
+                    ("ii", Input_I)]
+
+    def PressKey(hexKeyCode):
+
+        extra = ctypes.c_ulong(0)
+        ii_ = Input_I()
+        ii_.ki = KeyBdInput( hexKeyCode, 0x48, 0, 0, ctypes.pointer(extra) )
+        x = Input( ctypes.c_ulong(1), ii_ )
+        ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
+
+    def ReleaseKey(hexKeyCode):
+
+        extra = ctypes.c_ulong(0)
+        ii_ = Input_I()
+        ii_.ki = KeyBdInput( hexKeyCode, 0x48, 0x0002, 0, ctypes.pointer(extra) )
+        x = Input( ctypes.c_ulong(1), ii_ )
+        ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
     def simulate_key_down(key):
         key = keys[key]
-        win32api.keybd_event(key,       KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYDOWN)
+        PressKey(key)
 
     def simulate_key_up(key):
         key = keys[key]
-        win32api.keybd_event(key, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP)
+        ReleaseKey(key)
         
     keys = {
         b"0" : win32con.VK_LEFT,
@@ -119,10 +171,10 @@ def handle_key_event(event):
         element = browser.find_element_by_xpath("//body")
         element.click()
         if action == RELEASE:
-            print("press", key)
+            print("release", key)
             simulate_key_up(key)
         elif action == PRESS:
-            print("release", key)
+            print("press", key)
             simulate_key_down(key)
         
 
