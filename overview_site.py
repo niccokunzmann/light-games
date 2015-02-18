@@ -7,7 +7,7 @@ import os
 unknown_game_url = "https://upload.wikimedia.org/wikipedia/commons/6/6a/Dice.jpg"
 
 def get_url_from_index(game_index):
-    lines = list(open("games.txt").readlines())
+    lines = get_games()
     game_index %= len(lines)
     url = lines[game_index]
     url = url.strip()
@@ -22,8 +22,12 @@ def get_screenshot_path(url):
     hash = hash[:30]
     return "images/" + hash + ".png"
 
+def get_games():
+    with open("games.txt") as f:
+        return list(f)
+
 def number_of_games():
-    return len(list(open("games.txt")))
+    return len(get_games())
 
 @route('/')
 def overview_site():
@@ -87,7 +91,7 @@ t.start()
 overview_url = 'http://{}:{}'.format(HOST, PORT)
 
 def get_overview_game_url(game_index):
-    return overview_url + '/' + str(game_index)
+    return overview_url + '/games/' + str(game_index)
 
 
 
