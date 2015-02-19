@@ -77,9 +77,9 @@ def serve_site(game_index):
           document.onkeypress = navigateThroughGames;
         // --></script>
         <div width="100%">
-            <img src="{screenshot_path_previous}?t={t}" width="10%" align="top"/>
-            <img src="{screenshot_path}?t={t}" width="75%"/>
-            <img src="{screenshot_path_next}?t={t}" width="10%"  align="top"/>
+            <img src="{screenshot_path_previous}?t={t}" width="15%" align="top"/>
+            <img src="{screenshot_path}?t={t}" width="65%"/>
+            <img src="{screenshot_path_next}?t={t}" width="15%"  align="top"/>
         </div>
         <div width="100%">
             <center><img src="/qrcode/{game_index}.png?t={t}" height="90%"/></center>
