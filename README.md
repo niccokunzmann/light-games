@@ -3,14 +3,22 @@
 Installation
 ------------
 
-	pip install pyserial
-	pip install selenium
-	pip install bottle
+- install java
+- install the python packages
 
-optional:
+		pip install pyserial
+		pip install selenium
+		pip install bottle
 
-    pip install qrcode
+- optionally install
 
-under Windows:
+	pip install qrcode
 
-- install [pywin32](https://pypi.python.org/pypi/pywin32/214)
+- under Windows
+
+	- install [pywin32](https://pypi.python.org/pypi/pywin32/214)
+
+- under Linux:
+
+	- You may need to replace `pip` with `sudo pip-3.2`
+	- [Install Java](https://www.digitalocean.com/community/tutorials/how-to-install-java-on-ubuntu-with-apt-get)
