@@ -13,6 +13,7 @@ Installation
 - optionally install
 
 	pip install qrcode
+	pip install pillow
 
 - under Windows
 

@@ -9,7 +9,7 @@ def simulate_key_down(key):
     key = keys[key]
     win32api.keybd_event(key, key, 0, 0)
 
-def simulate_key_down(key):
+def simulate_key_up(key):
     key = keys[key]
     win32api.keybd_event(key, key,  KEYEVENTF_KEYUP, 0)
     
@@ -41,5 +41,5 @@ def set_browser(_browser):
 def game_handles_key(key):
     return key in keys
 
-__all__ = "simulate_key_down simulate_key_down click screenshot "\
+__all__ = "simulate_key_down simulate_key_up click screenshot "\
           "set_browser game_handles_key".split()
