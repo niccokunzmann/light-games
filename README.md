@@ -7,6 +7,10 @@ Installation
 	pip install selenium
 	pip install bottle
 
+optional:
+
+    pip install qrcode
+
 under Windows:
 
 - install [pywin32](https://pypi.python.org/pypi/pywin32/214)

@@ -3,6 +3,12 @@ import threading
 from bottle import route, run, static_file, redirect, response
 import hashlib
 import os
+try:
+    import qrcode
+    has_qrcode = True
+except ImportError:
+    has_qrcode = False
+import io
 
 i = 0
 
@@ -45,10 +51,11 @@ def serve_site(game_index):
     url = get_url_from_index(game_index)
     # http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
     # http://stackoverflow.com/questions/8749434/how-to-prevent-browser-image-caching
-    screenshot_path = "/" + get_screenshot_path(url) + "?t=" + str(i)
+    screenshot_path = "/" + get_screenshot_path(url)
     screenshot_path_previous = "/" + get_screenshot_path(get_url_from_index(previous_game_index)) + "?t=" + str(i)
     screenshot_path_next = "/" + get_screenshot_path(get_url_from_index(next_game_index)) + "?t=" + str(i)
     i+= 1
+    t = i
     return """
 <html>
     <head>
@@ -70,11 +77,12 @@ def serve_site(game_index):
           document.onkeypress = navigateThroughGames;
         // --></script>
         <div width="100%">
-            <img src="{screenshot_path_previous}" width="10%" align="top"/>
-            <img src="{screenshot_path}" width="75%"/>
-            <img src="{screenshot_path_next}" width="10%"  align="top"/>
+            <img src="{screenshot_path_previous}?t={t}" width="10%" align="top"/>
+            <img src="{screenshot_path}?t={t}" width="75%"/>
+            <img src="{screenshot_path_next}?t={t}" width="10%"  align="top"/>
         </div>
         <div width="100%">
+            <center><img src="/qrcode/{game_index}.png?t={t}" height="90%"/></center>
         </div>
     </body>
 </html>
@@ -88,6 +96,18 @@ def get_image(image_name):
         # http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
         # http://stackoverflow.com/questions/8749434/how-to-prevent-browser-image-caching
         return static_file(image_name, root='images')
+
+@route("/qrcode/<game_index:int>.png")
+def get_qr_code(game_index):
+    if not has_qrcode:
+        print('no qrcode')
+        return None
+    url = get_url_from_index(game_index)
+    i = qrcode.make(url)
+    b = io.BytesIO()
+    i.save(b)
+    b.seek(0)
+    return b
 
 @route("/play/<game_index:int>")
 def play_game(game_index):
