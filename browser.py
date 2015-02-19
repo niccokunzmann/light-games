@@ -7,6 +7,12 @@ from selenium.webdriver.common.action_chains import ActionChains
 import threading
 import overview_site
 
+if os.name == 'nt':
+    import browser_nt
+    from browser_nt import *
+else:
+    import browser_other
+    from browser_other import *
 browser_lock = threading.RLock()
 
 SERIAL_IDENTIFIER = b"Light-Keyboard";
@@ -120,7 +126,8 @@ def press_keys():
             if key in keys_pressing:
                 keys_pressing.remove(key)
         for key in keys_pressing:
-            simulate_key_down(key)
+            with browser_lock:
+                simulate_key_down(key)
         for key in range(len(keys_pressed)):
             keys_pressing.add(keys_pressed.pop())
 
@@ -138,76 +145,15 @@ def remove_all_key_presses():
     keys_removed.update(keys_pressed)
     keys_removed.update(keys_pressing)
 
-if os.name == 'nt':
-    print("nt")
-    # http://stackoverflow.com/questions/18096131/pywin32-sendkeys-windows-button-keypress
-    # http://stackoverflow.com/questions/1823762/sendkeys-for-python-3-1-on-windows/2004267#2004267
-    import win32api
-    import win32con
-    from win32con import KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP
-
-    def simulate_key_down(key):
-        key = keys[key]
-        win32api.keybd_event(key, key, 0, 0)
-
-    def simulate_key_up(key):
-        key = keys[key]
-        win32api.keybd_event(key, key,  KEYEVENTF_KEYUP, 0)
-        
-        
-    keys = {
-        b"0" : win32con.VK_LEFT,
-        b"1" : win32con.VK_RIGHT,
-        b"2" : win32con.VK_UP,
-        b"3" : win32con.VK_DOWN,
-        b"4" : win32con.VK_SPACE,
-        }
-
-    def click(x, y):
-        print("click", x, y)
-        win32api.SetCursorPos((x, y))
-        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
-        time.sleep(0.1)
-        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0)
-        time.sleep(0.1)
-
-    def screenshot(x, y, width, height, file_name):
-        import screenshot
-        print('screenshot', x, y, width, height)
-        screenshot.screenshot(file_name)
-
-else:
-    # other systems
-    def simulate_key_down(key):
-        key = keys[key]
-        with browser_lock:
-            element = browser.find_element_by_xpath("//body")
-            element.send_keys(key)
-    
-    def simulate_key_up(key):
-        pass
-    
-    keys = {
-        b"0" : Keys.LEFT,
-        b"1" : Keys.RIGHT,
-        b"2" : Keys.UP,
-        b"3" : Keys.DOWN,
-        b"4" : Keys.SPACE,
-        }
-    
-    def click(x, y):
-        pass
-
-    def screenshot(x, y, width, height, file_name):
-        browser.get_screenshot_as_file(file_name)
-
 def press_key(key):
-    simulate_key_down(key)
+    with browser_lock:
+        simulate_key_down(key)
     add_key_pressed(key)
 
 def release_key(key):
     remove_key_pressed(key)
-    simulate_key_up(key) #multithreading issues may arise
+    with browser_lock:
+        simulate_key_up(key) #multithreading issues may arise
 
 RELEASE = b'-'[0]
 PRESS = b'+'[0]
@@ -215,7 +161,7 @@ PRESS = b'+'[0]
 def handle_key_event(event):
     action = event[1]
     
-    if event[0] not in keys:
+    if not game_handles_key(event[0]):
         if action == RELEASE:
             switch_game()
     else:
@@ -229,12 +175,16 @@ def handle_key_event(event):
         else:
             print("unknown action", event)
         
+def maximize_browser():
+    with browser_lock:
+        #http://stackoverflow.com/questions/9601618/selenium-webdriver-c-fullscreen-mode-in-browser
+        browser.find_element_by_tag_name("html").send_keys(Keys.F11)
+        #browser.maximize_window()
 
 def get_web_window():
     with browser_lock:
         browser = webdriver.Firefox()
         browser.set_window_position(0,0)
-        #browser.maximize_window()
         return browser
 
 start_selenium_server()
@@ -246,6 +196,8 @@ or it does not run the right program. Exiting...""")
     exit(1)
 
 browser = get_web_window()
+set_browser(browser)
+maximize_browser()
 open_overview()
 try:
     while 1:

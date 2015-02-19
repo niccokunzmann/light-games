@@ -1,8 +1,10 @@
 import bottle
 import threading
-from bottle import route, run, static_file, redirect
+from bottle import route, run, static_file, redirect, response
 import hashlib
 import os
+
+i = 0
 
 unknown_game_url = "https://upload.wikimedia.org/wikipedia/commons/6/6a/Dice.jpg"
 
@@ -35,12 +37,18 @@ def overview_site():
 
 @route("/games/<game_index:int>")
 def serve_site(game_index):
+    global i
     maximum_game_index = number_of_games()
     game_index = int(game_index) % maximum_game_index
     next_game_index = (game_index + 1) % maximum_game_index
     previous_game_index = (game_index - 1) % maximum_game_index
     url = get_url_from_index(game_index)
-    screenshot_path = "/" + get_screenshot_path(url)
+    # http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+    # http://stackoverflow.com/questions/8749434/how-to-prevent-browser-image-caching
+    screenshot_path = "/" + get_screenshot_path(url) + "?t=" + str(i)
+    screenshot_path_previous = "/" + get_screenshot_path(get_url_from_index(previous_game_index)) + "?t=" + str(i)
+    screenshot_path_next = "/" + get_screenshot_path(get_url_from_index(next_game_index)) + "?t=" + str(i)
+    i+= 1
     return """
 <html>
     <head>
@@ -61,7 +69,13 @@ def serve_site(game_index):
           }}
           document.onkeypress = navigateThroughGames;
         // --></script>
-        <img src="{screenshot_path}" width="100%"/>
+        <div width="100%">
+            <img src="{screenshot_path_previous}" width="10%" align="top"/>
+            <img src="{screenshot_path}" width="75%"/>
+            <img src="{screenshot_path_next}" width="10%"  align="top"/>
+        </div>
+        <div width="100%">
+        </div>
     </body>
 </html>
 """.format(**locals())
@@ -70,7 +84,10 @@ def serve_site(game_index):
 def get_image(image_name):
     if not os.path.exists("images/" + image_name):
         redirect(unknown_game_url)
-    return static_file(image_name, root='images')
+    else:
+        # http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+        # http://stackoverflow.com/questions/8749434/how-to-prevent-browser-image-caching
+        return static_file(image_name, root='images')
 
 @route("/play/<game_index:int>")
 def play_game(game_index):
