@@ -66,19 +66,25 @@ def switch_to_game_url(url):
 
 current_game_index = 0
 
+is_in_overview = False
+
 def switch_to_game(game_index):
-    global current_game_index
+    global current_game_index, is_in_overview
     current_game_index = game_index
     url = overview_site.get_url_from_index(game_index)
     switch_to_game_url(url)
+    is_in_overview = False
 
 def switch_game():
-    screenshot_game()
-    open_overview()
+    if not is_in_overview:
+        screenshot_game()
+        open_overview()
 
 def open_overview():
+    global is_in_overview
     overview_url = overview_site.get_overview_game_url(current_game_index)
     switch_to_game_url(overview_url)
+    is_in_overview = True
 
 overview_site.switch_to_game = switch_to_game
 
@@ -99,6 +105,7 @@ def open_serial():
         s.timeout = 5;
         data = s.readline()
         if SERIAL_IDENTIFIER not in data:
+            print('wrong serial:', data, port)
             s.close()
             continue
         print("Serial Port:", port)
@@ -194,7 +201,8 @@ if __name__ == '__main__':
     if not serial_to_light:
         print("""Could not open a connection to the Arduino.
 Maybe the Arduino is not connected
-or it does not run the right program. Exiting...""")
+or it does not run the right program or
+somebody uses the Arduino already. Exiting...""")
         exit(1)
 
     start_selenium_server()
