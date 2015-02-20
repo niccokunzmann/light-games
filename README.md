@@ -3,6 +3,7 @@
 Installation
 ------------
 
+- install [Python3.4](https://www.python.org/downloads/) or higher
 - install java
 - install the python packages
 
@@ -20,10 +21,15 @@ Installation
 	- install [pywin32](https://pypi.python.org/pypi/pywin32/214)
 	- install Firefox
 
+
 - under Linux:
 
 	- You may need to replace `pip` with `sudo pip-3.2`
 	- [Install Java](https://www.digitalocean.com/community/tutorials/how-to-install-java-on-ubuntu-with-apt-get)
+	- install these packages
+	 
+	        sudo apt-get install imagemagick
+            sudo apt-get install xdotool
 
 	- on a raspberry pi
 
