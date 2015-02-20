@@ -217,7 +217,7 @@ somebody uses the Arduino already. Exiting...""")
             if key_event:
                 handle_key_event(key_event)
     finally:
+        remove_all_key_presses()
         serial_to_light.close()
         with browser_lock:
             browser.close()
-        remove_all_key_presses()
