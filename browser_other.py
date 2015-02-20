@@ -33,5 +33,5 @@ def set_browser(_browser):
 def game_handles_key(key):
     return key in keys
     
-__all__ = "simulate_key_down simulate_key_down click screenshot "\
+__all__ = "simulate_key_down simulate_key_up click screenshot "\
           "set_browser game_handles_key".split()

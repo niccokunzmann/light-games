@@ -190,7 +190,6 @@ def get_web_window():
         return browser
 
 if __name__ == '__main__':
-    start_selenium_server()
     serial_to_light = open_serial()
     if not serial_to_light:
         print("""Could not open a connection to the Arduino.
@@ -198,8 +197,10 @@ Maybe the Arduino is not connected
 or it does not run the right program. Exiting...""")
         exit(1)
 
+    start_selenium_server()
     browser = get_web_window()
-    set_browser(browser)
+    with browser_lock:
+        set_browser(browser)
     maximize_browser()
     open_overview()
     try:
@@ -208,6 +209,7 @@ or it does not run the right program. Exiting...""")
             if key_event:
                 handle_key_event(key_event)
     finally:
+        serial_to_light.close()
         with browser_lock:
             browser.close()
         remove_all_key_presses()

@@ -6,6 +6,7 @@ import hashlib
 import os
 try:
     import qrcode
+    import qrcode.image.svg
     has_qrcode = True
 except ImportError:
     has_qrcode = False
@@ -14,6 +15,15 @@ import io
 i = 0
 
 unknown_game_url = "https://upload.wikimedia.org/wikipedia/commons/6/6a/Dice.jpg"
+
+def get_qr_code_svg(url):
+    if not has_qrcode:
+        return ""
+    i = qrcode.make(url, image_factory = qrcode.image.svg.SvgPathImage)
+    b = io.BytesIO()
+    i.save(b)
+    b.seek(0)
+    return b.read().decode("utf-8")
 
 def get_url_from_index(game_index):
     lines = get_games()
@@ -57,6 +67,10 @@ def serve_site(game_index):
     screenshot_path_next = "/" + get_screenshot_path(get_url_from_index(next_game_index)) + "?t=" + str(i)
     i+= 1
     t = i
+    if has_qrcode:
+        qrcode = '<center><img src="/qrcode/{game_index}.svg?t={t}" height="90%"/></center>'.format(**locals())
+    else:
+        qrcode = ""
     return """
 <html>
     <head>
@@ -83,7 +97,7 @@ def serve_site(game_index):
             <img src="{screenshot_path_next}?t={t}" width="15%"  align="top"/>
         </div>
         <div width="100%">
-            <center><img src="/qrcode/{game_index}.png?t={t}" height="90%"/></center>
+            {qrcode}
         </div>
     </body>
 </html>
@@ -98,17 +112,11 @@ def get_image(image_name):
         # http://stackoverflow.com/questions/8749434/how-to-prevent-browser-image-caching
         return static_file(image_name, root='images')
 
-@route("/qrcode/<game_index:int>.png")
+@route("/qrcode/<game_index:int>.svg")
 def get_qr_code(game_index):
-    if not has_qrcode:
-        print('no qrcode')
-        return None
+    response.set_header('Content-Type', 'image/svg+xml')
     url = get_url_from_index(game_index)
-    i = qrcode.make(url)
-    b = io.BytesIO()
-    i.save(b)
-    b.seek(0)
-    return b
+    return  get_qr_code_svg(url)
 
 @route("/play/<game_index:int>")
 def play_game(game_index):
