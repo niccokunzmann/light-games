@@ -89,7 +89,7 @@ def serve_site(game_index):
               document.location = "/play/" + {game_index};
             }}
           }}
-          document.onkeypress = navigateThroughGames;
+          document.onkeyup = navigateThroughGames;
         // --></script>
         <div width="100%">
             <img src="{screenshot_path_previous}?t={t}" width="15%" align="top"/>
