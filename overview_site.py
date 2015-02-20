@@ -79,25 +79,27 @@ def serve_site(game_index):
         </title>
     </head>
     <body>
-        <script type="text/javascript"><!--
-	  function navigateThroughGames(event) {{
-            if (event.keyCode == 39 || event.keyCode == 13) {{
-              document.location = "/games/" + {next_game_index};
-            }} else if (event.keyCode == 37) {{
-              document.location = "/games/" + {previous_game_index};
-            }} else if (event.charCode == 32) {{
-              document.location = "/play/" + {game_index};
-            }}
-          }}
-          document.onkeyup = navigateThroughGames;
-        // --></script>
         <div width="100%">
-            <img src="{screenshot_path_previous}?t={t}" width="15%" align="top"/>
-            <img src="{screenshot_path}?t={t}" width="65%"/>
-            <img src="{screenshot_path_next}?t={t}" width="15%"  align="top"/>
-        </div>
-        <div width="100%">
-            {qrcode}
+            <script type="text/javascript"><!--
+              function navigateThroughGames(event) {{
+                if (event.keyCode == 39 || event.keyCode == 13) {{
+                  document.location = "/games/" + {next_game_index};
+                }} else if (event.keyCode == 37) {{
+                  document.location = "/games/" + {previous_game_index};
+                }} else if (event.charCode == 32 || event.keyCode == 32) {{
+                  document.location = "/play/" + {game_index};
+                }}
+              }}
+              document.onkeyup = navigateThroughGames;
+            // --></script>
+            <div width="100%">
+                <img src="{screenshot_path_previous}?t={t}" width="15%" align="top"/>
+                <img src="{screenshot_path}?t={t}" width="65%"/>
+                <img src="{screenshot_path_next}?t={t}" width="15%"  align="top"/>
+            </div>
+            <div width="100%">
+                {qrcode}
+            </div>
         </div>
     </body>
 </html>
