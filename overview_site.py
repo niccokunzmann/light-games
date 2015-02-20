@@ -132,7 +132,11 @@ def switch_to_game(game_index):
 HOST = 'localhost'
 PORT = 8081
 
-t = threading.Thread(target = run, kwargs = dict(host=HOST, port=PORT, debug=True))
+debug = __name__ == '__main__'
+quiet = not debug
+
+t = threading.Thread(target = run, kwargs = dict(host=HOST, port=PORT,
+                                                 debug=debug, quiet = quiet))
 t.deamon = True
 t.start()
 
