@@ -25,6 +25,10 @@ class Sensor {
       setup();
     }
     
+    int last_sensor_value() {
+      return last_sample;
+    }
+    
     void addSample(int sample) {
       last_sample = sample;
     }
@@ -116,6 +120,17 @@ void update_sensors() {
   }
 }
 
+void print_sensor_values() {
+  for (int i = 0; i < number_of_sensors - 1; ++i) {
+    int sensor_value = sensors[i]->last_sensor_value();
+    Serial.print(sensor_value);
+    Serial.print("\t");
+  }
+  if (number_of_sensors > 1) {
+    int sensor_value = sensors[number_of_sensors - 1]->last_sensor_value();
+    Serial.println(sensor_value);  
+  }
+}
 
 void setup() {
   Serial.begin(9600);
@@ -135,6 +150,10 @@ long next_update = 0;
 
 void loop(){
  update_sensors();
+ if (Serial.available()) {
+   int inByte = Serial.read();
+   print_sensor_values();
+ }
 }
 
 
